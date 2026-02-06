@@ -1,0 +1,44 @@
+{
+  "campaignName": "Curse of Strahd",
+  "campaignId": "camp_default_001",
+  "lastUpdated": 1766967242309,
+  "party": [
+    {
+      "id": "zandir",
+      "name": "Zandir",
+      "class": "Ranger",
+      "level": 5,
+      "color": "#ff6a00",
+      "playerName": "Alex",
+      "maxHp": 45,
+      "currentHp": 45,
+      "ac": 16,
+      "initiative": 3
+    },
+    {
+      "id": "faith",
+      "name": "Faith",
+      "class": "Cleric",
+      "level": 5,
+      "color": "#00d4ff",
+      "playerName": "Jordan",
+      "maxHp": 38,
+      "currentHp": 38,
+      "ac": 18,
+      "initiative": 1
+    },
+    {
+      "id": "bronk",
+      "name": "Bronk",
+      "class": "Fighter",
+      "level": 5,
+      "color": "#00ff88",
+      "playerName": "Sam",
+      "maxHp": 52,
+      "currentHp": 52,
+      "ac": 19,
+      "initiative": 2
+    }
+  ],
+  "encounters": []
+}

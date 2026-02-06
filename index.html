@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <title>D&D Combat Tracker - Esports Edition</title>
+  </head>
+  <body>
+    <!-- Main App Container -->
+    <div id="app">
+      <!-- Header -->
+      <header class="app-header">
+        <h1>⚔️ D&D COMBAT TRACKER</h1>
+        <div class="header-actions">
+          <button onclick="handleExportCampaign()" class="btn-secondary">
+            💾 Export
+          </button>
+        </div>
+      </header>
+
+      <!-- Encounter Info Bar -->
+      <div class="encounter-info-bar">
+        <div class="encounter-info-section">
+          <span class="info-label">Encounter:</span>
+          <span id="encounterName" class="info-value">No Active Encounter</span>
+        </div>
+        <div class="encounter-info-section">
+          <span class="info-label">Round:</span>
+          <span id="currentRound" class="info-value">0</span>
+        </div>
+        <div class="encounter-info-section">
+          <span class="info-label">Duration:</span>
+          <span id="encounterDuration" class="info-value">0:00</span>
+        </div>
+        <div class="encounter-actions">
+          <button onclick="handleStartEncounter()" class="btn-primary">
+            ▶️ Start
+          </button>
+          <button onclick="handleNewRound()" class="btn-primary">
+            🔄 New Round
+          </button>
+          <button onclick="handleEndEncounter()" class="btn-danger">
+            ⏹️ End
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div id="encounterView" class="main-grid" style="display: none">
+        <!-- Left Panel: Party Stats -->
+        <aside class="left-panel">
+          <h2>Party Stats</h2>
+          <div id="partyDashboard">
+            <p class="empty-state">Start an encounter to see stats</p>
+          </div>
+        </aside>
+
+        <!-- Center Panel: Event Log -->
+        <main class="center-panel">
+          <h2>Combat Log</h2>
+          <div id="eventLog" class="event-log">
+            <p class="empty-state">No events yet</p>
+          </div>
+        </main>
+
+        <!-- Right Panel: Enemy Tracker -->
+        <aside class="right-panel">
+          <div class="enemy-tracker-header">
+            <h2>Enemies</h2>
+            <button onclick="showAddEnemy()" class="btn-add">+ Add</button>
+          </div>
+          <div id="enemyList" class="enemy-list">
+            <p class="empty-state">No enemies in combat</p>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Dashboard View (when no encounter is active) -->
+      <div id="dashboardView" class="dashboard-container">
+        <div class="dashboard-welcome">
+          <h2>📊 Campaign Dashboard</h2>
+          <p class="dashboard-subtitle">
+            View past encounters and campaign statistics
+          </p>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Campaign Stats Summary -->
+          <div class="dashboard-card">
+            <div class="dashboard-card-header">
+              <h3>🏆 Campaign Stats</h3>
+            </div>
+            <div class="dashboard-card-body">
+              <div class="stat-placeholder">
+                <div class="stat-placeholder-label">Total Encounters</div>
+                <div class="stat-placeholder-value" id="totalEncounters">
+                  --
+                </div>
+              </div>
+              <div class="stat-placeholder">
+                <div class="stat-placeholder-label">Total Rounds</div>
+                <div class="stat-placeholder-value" id="totalRounds">--</div>
+              </div>
+              <div class="stat-placeholder">
+                <div class="stat-placeholder-label">Total Damage Dealt</div>
+                <div class="stat-placeholder-value" id="totalDamage">--</div>
+              </div>
+              <div class="stat-placeholder">
+                <div class="stat-placeholder-label">Enemies Defeated</div>
+                <div class="stat-placeholder-value" id="totalDefeats">--</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Party Overview -->
+          <div class="dashboard-card">
+            <div class="dashboard-card-header">
+              <h3>⚔️ Party Overview</h3>
+            </div>
+            <div class="dashboard-card-body">
+              <div id="partyOverview" class="party-overview-list">
+                <p class="empty-state">Loading party data...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Encounters -->
+          <div class="dashboard-card dashboard-card-wide">
+            <div class="dashboard-card-header">
+              <h3>📜 Recent Encounters</h3>
+            </div>
+            <div class="dashboard-card-body">
+              <div id="recentEncounters" class="recent-encounters-list">
+                <p class="empty-state">
+                  No encounters completed yet. Start your first encounter!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- MVP Stats -->
+          <div class="dashboard-card">
+            <div class="dashboard-card-header">
+              <h3>🌟 Top Performers</h3>
+            </div>
+            <div class="dashboard-card-body">
+              <div class="stat-placeholder">
+                <div class="stat-placeholder-label">Most Damage Dealt</div>
+                <div class="stat-placeholder-value" id="topDamage">--</div>
+              </div>
+              <div class="stat-placeholder">
+                <div class="stat-placeholder-label">Most Healing Done</div>
+                <div class="stat-placeholder-value" id="topHealing">--</div>
+              </div>
+              <div class="stat-placeholder">
+                <div class="stat-placeholder-label">Most Kills</div>
+                <div class="stat-placeholder-value" id="topKills">--</div>
+              </div>
+              <div class="stat-placeholder">
+                <div class="stat-placeholder-label">Highest Hit Rate</div>
+                <div class="stat-placeholder-value" id="topHitRate">--</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Trends Chart (Row 2, Column 3) -->
+          <div class="dashboard-card" id="damageTrendsCard">
+            <div class="dashboard-card-header">
+              <h3>📈 Damage Trends</h3>
+            </div>
+            <div class="dashboard-card-body">
+              <div class="chart-container">
+                <canvas id="statsTrendsChart"></canvas>
+              </div>
+              <div class="chart-metric-toggles">
+                <button
+                  class="metric-toggle-btn active"
+                  data-metric="avgDamage"
+                >
+                  ⚔️ Avg Damage/Hit
+                </button>
+                <button class="metric-toggle-btn" data-metric="dps">
+                  💥 DPS
+                </button>
+                <button class="metric-toggle-btn" data-metric="skillChecks">
+                  🎲 Skill Checks
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="dashboard-card">
+            <div class="dashboard-card-header">
+              <h3>🚀 Quick Actions</h3>
+            </div>
+            <div class="dashboard-card-body">
+              <button
+                onclick="handleStartEncounter()"
+                class="btn-primary btn-full"
+              >
+                ▶️ Start New Encounter
+              </button>
+              <button
+                onclick="handleExportCampaign()"
+                class="btn-secondary btn-full mt-2"
+              >
+                💾 Export Campaign Data
+              </button>
+              <button
+                onclick="loadPastEncounter()"
+                class="btn-secondary btn-full mt-2"
+              >
+                📂 View Past Encounter
+              </button>
+            </div>
+          </div>
+
+          <!-- Healing Trends Chart -->
+          <div class="dashboard-card" id="healingTrendsCard">
+            <div class="dashboard-card-header">
+              <h3>💚 Healing Trends</h3>
+            </div>
+            <div class="dashboard-card-body">
+              <div class="chart-container">
+                <canvas id="healingTrendsChart"></canvas>
+              </div>
+              <div class="chart-metric-toggles">
+                <button
+                  class="metric-toggle-btn active"
+                  data-metric="avgHealing"
+                >
+                  💚 Avg Healing/Cast
+                </button>
+                <button class="metric-toggle-btn" data-metric="hps">
+                  💚 HPS
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Action Toolbar -->
+    <div class="combat-toolbar">
+      <button onclick="showQuickAttack()" title="Quick Attack (A)">
+        <span class="icon">⚔️</span>
+        <span class="label">Attack</span>
+      </button>
+      <button onclick="showQuickHeal()" title="Quick Heal (H)">
+        <span class="icon">❤️</span>
+        <span class="label">Heal</span>
+      </button>
+      <button onclick="showQuickSpell()" title="Cast Spell (S)">
+        <span class="icon">✨</span>
+        <span class="label">Spell</span>
+      </button>
+      <button onclick="showQuickSkillCheck()" title="Skill Check (K)">
+        <span class="icon">🎲</span>
+        <span class="label">Check</span>
+      </button>
+      <button onclick="showQuickNote()" title="Add Note (N)">
+        <span class="icon">📝</span>
+        <span class="label">Note</span>
+      </button>
+      <button onclick="showDiceRoller()" title="Dice Roller">
+        <span class="icon">🎲</span>
+        <span class="label">Roll</span>
+      </button>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- MODALS -->
+    <!-- ============================================================================ -->
+
+    <!-- Quick Attack Modal -->
+    <div id="quickAttackModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>⚔️ Quick Attack</h3>
+          <button onclick="closeModal('quickAttackModal')" class="modal-close">
+            &times;
+          </button>
+        </div>
+        <form onsubmit="submitQuickAttack(event)">
+          <div class="form-row">
+            <label>Attacker:</label>
+            <select id="attackAttacker" class="attacker-select" required>
+              <option value="">Select attacker...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Target:</label>
+            <select id="attackTarget" class="target-select" required>
+              <option value="">Select target...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Attack Roll (d20):</label>
+            <div class="input-with-btn">
+              <input
+                type="number"
+                id="attackRoll"
+                min="1"
+                max="20"
+                placeholder="Optional"
+              />
+              <button
+                type="button"
+                onclick="rollD20('attackRoll')"
+                class="btn-dice"
+              >
+                🎲
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Damage:</label>
+            <input type="number" id="attackDamage" min="0" required value="0" />
+          </div>
+
+          <div class="form-row">
+            <label>Result:</label>
+            <div class="button-group">
+              <button type="submit" data-result="hit" class="btn-hit">
+                Hit
+              </button>
+              <button type="submit" data-result="crit" class="btn-crit">
+                CRIT!
+              </button>
+              <button type="submit" data-result="miss" class="btn-miss">
+                Miss
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Quick Heal Modal -->
+    <div id="quickHealModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>❤️ Quick Heal</h3>
+          <button onclick="closeModal('quickHealModal')" class="modal-close">
+            &times;
+          </button>
+        </div>
+        <form onsubmit="submitQuickHeal(event)">
+          <div class="form-row">
+            <label>Healer:</label>
+            <select id="healHealer" class="healer-select" required>
+              <option value="">Select healer...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Target:</label>
+            <select id="healTarget" class="target-select" required>
+              <option value="">Select target...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Healing Amount:</label>
+            <input
+              type="number"
+              id="healAmount"
+              min="1"
+              required
+              placeholder="0"
+            />
+          </div>
+
+          <div class="form-row">
+            <label>Source:</label>
+            <input
+              type="text"
+              id="healSource"
+              placeholder="e.g., Cure Wounds"
+            />
+          </div>
+
+          <div class="form-row">
+            <button type="submit" class="btn-primary btn-full">✅ Heal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Quick Spell Modal -->
+    <div id="quickSpellModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>✨ Cast Spell</h3>
+          <button onclick="closeModal('quickSpellModal')" class="modal-close">
+            &times;
+          </button>
+        </div>
+        <form onsubmit="submitQuickSpell(event)">
+          <div class="form-row">
+            <label>Caster:</label>
+            <select id="spellCaster" class="attacker-select" required>
+              <option value="">Select caster...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Spell Name:</label>
+            <input
+              type="text"
+              id="spellName"
+              required
+              placeholder="e.g., Fireball"
+            />
+          </div>
+
+          <div class="form-row">
+            <label>Spell Level:</label>
+            <input type="number" id="spellLevel" min="0" max="9" value="1" />
+          </div>
+
+          <div class="form-row">
+            <label>Target (optional):</label>
+            <select id="spellTarget" class="target-select">
+              <option value="">No target / Area</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Damage (optional):</label>
+            <input type="number" id="spellDamage" min="0" placeholder="0" />
+          </div>
+
+          <div class="form-row">
+            <button type="submit" class="btn-primary btn-full">
+              ✅ Cast Spell
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Quick Skill Check Modal -->
+    <div id="quickSkillModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>🎲 Skill Check</h3>
+          <button onclick="closeModal('quickSkillModal')" class="modal-close">
+            &times;
+          </button>
+        </div>
+        <form onsubmit="submitQuickSkillCheck(event)">
+          <div class="form-row">
+            <label>Character:</label>
+            <select id="skillActor" class="party-select" required>
+              <option value="">Select character...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Skill:</label>
+            <input
+              type="text"
+              id="skillName"
+              required
+              placeholder="e.g., Perception"
+            />
+          </div>
+
+          <div class="form-row">
+            <label>Roll Result:</label>
+            <div class="input-with-btn">
+              <input type="number" id="skillRoll" required placeholder="0" />
+              <button
+                type="button"
+                onclick="rollD20('skillRoll')"
+                class="btn-dice"
+              >
+                🎲
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>DC:</label>
+            <input type="number" id="skillDC" required placeholder="15" />
+          </div>
+
+          <div class="form-row">
+            <button type="submit" class="btn-primary btn-full">
+              ✅ Log Check
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Enemy Modal -->
+    <div id="addEnemyModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>➕ Add Enemy</h3>
+          <button onclick="closeModal('addEnemyModal')" class="modal-close">
+            &times;
+          </button>
+        </div>
+        <form onsubmit="submitAddEnemy(event)">
+          <div class="form-row">
+            <label>Name:</label>
+            <input
+              type="text"
+              id="enemyName"
+              required
+              placeholder="e.g., Goblin 1"
+            />
+          </div>
+
+          <div class="form-row">
+            <label>HP:</label>
+            <input
+              type="number"
+              id="enemyHP"
+              min="1"
+              required
+              placeholder="7"
+            />
+          </div>
+
+          <div class="form-row">
+            <label>AC:</label>
+            <input
+              type="number"
+              id="enemyAC"
+              min="1"
+              required
+              placeholder="15"
+            />
+          </div>
+
+          <div class="form-row">
+            <button type="submit" class="btn-primary btn-full">
+              ✅ Add Enemy
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div
+      id="modalOverlay"
+      class="modal-overlay"
+      onclick="closeAllModals()"
+    ></div>
+
+    <!-- Load Scripts -->
+    <script src="encounter.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Populate enemy dropdowns dynamically -->
+    <script>
+      // Update enemy dropdowns when encounter changes
+      function updateEnemyDropdowns() {
+        if (!currentEncounter) return;
+
+        const dropdowns = [
+          document.getElementById("attackTarget"),
+          document.getElementById("spellTarget"),
+        ];
+
+        dropdowns.forEach((dropdown) => {
+          if (!dropdown) return;
+          const current = dropdown.value;
+          dropdown.innerHTML = '<option value="">Select target...</option>';
+
+          currentEncounter.enemies.forEach((enemy) => {
+            if (enemy.hp > 0) {
+              const option = document.createElement("option");
+              option.value = enemy.id;
+              option.textContent = `${enemy.name} (${enemy.hp}/${enemy.maxHp} HP)`;
+              dropdown.appendChild(option);
+            }
+          });
+
+          if (current) dropdown.value = current;
+        });
+      }
+
+      // Override updateUI to also update enemy dropdowns
+      const originalUpdateUI = updateUI;
+      updateUI = function () {
+        originalUpdateUI();
+        updateEnemyDropdowns();
+      };
+    </script>
+  </body>
+</html>
